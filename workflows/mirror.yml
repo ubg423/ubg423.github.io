@@ -1,0 +1,33 @@
+name: Sync from ubg423
+
+on:
+  schedule:
+    - cron: "*/2 * * * *"   # every 2 minutes
+  workflow_dispatch:         # allow manual run
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout target repo (ubg42)
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+
+      - name: Clone source repo (ubg423)
+        run: |
+          git clone --depth 1 https://github.com/ubg423/ubg423.github.io source
+
+      - name: Copy files from source → target
+        run: |
+          rsync -av --delete source/ .
+          rm -rf source
+          git config user.email "github-actions@github.com"
+          git config user.name "Auto Sync Bot"
+          git add .
+          git commit -m "Sync from ubg423" || true
+
+      - name: Push changes
+        run: |
+          git push
